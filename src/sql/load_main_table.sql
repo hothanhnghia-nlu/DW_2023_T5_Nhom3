@@ -1,11 +1,7 @@
--- Connect to DB staging, control
+-- 1.Connect to DB staging, control, data warehouse
 use staging;
 use control;
-
--- Insert Table log(control):time:now, process:4,status:start 
-INSERT INTO control.log (time, process_id, status)
-VALUES (NOW(), 4, 'start');
-
+use datawarehouse;
 
 DROP PROCEDURE IF EXISTS CheckAndAct;
 
@@ -14,26 +10,35 @@ DELIMITER //
 CREATE PROCEDURE CheckAndAct()
 BEGIN
     DECLARE recordCount INT;
+		DECLARE runningCount INT;
 
---     SELECT COUNT(*) INTO recordCount
---     FROM control.log
---     WHERE process_id = 3 AND status = 'successful'
---         AND DATE_FORMAT(time, '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i')
---     GROUP BY DATE_FORMAT(time, '%Y-%m-%d %H:%i')
---     HAVING DATE_FORMAT(MAX(time), '%Y-%m-%d %H:%i') = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i');
  SELECT COUNT(*)
-    INTO recordCount
-    FROM control.log
-    WHERE process_id = 3
-        AND status = 'successful'
-        AND time >= NOW() - INTERVAL 1 MINUTE;
+INTO recordCount
+FROM control.log
+WHERE process_id = 3
+    AND status = 'successful'
+    AND time >= DATE_SUB(NOW(), INTERVAL 1 HOUR);
+		
+		 SELECT COUNT(*)
+INTO runningCount
+FROM control.log
+WHERE process_id = 4
+    AND status = 'start'
+    AND time >= DATE_SUB(NOW(), INTERVAL 1 HOUR);
 
-    IF recordCount > 0 THEN
+-- 2.Check exist in log table has log: process_id: 3, status: successful, time: now - interval 1 hour
+    IF recordCount > 0 AND runningCount = 0 THEN
+-- 		3. Insert Table log(control):time:now, process:4,status:start 
+		INSERT INTO control.log (time, process_id, status)
+VALUES (NOW(), 4, 'start');
+
+		
         DROP TABLE IF EXISTS temp_data_province;
 DROP TABLE IF EXISTS temp_data_weather;
 DROP TABLE IF EXISTS temp_data_main_table;
 
-
+-- 5. Create temporary table temp_data_province, temp_data_weather, temp_data_main_table and change data type column
+--  to save data from second-table
 CREATE TEMPORARY TABLE IF NOT EXISTS temp_data_province (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     province TEXT
@@ -57,8 +62,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS temp_data_main_table (
     t4 INT,
     t5 INT
 );
--- set num of temp_data continue with dw
--- Lấy giá trị lớn nhất từ bảng temp_data_province
+
+-- Lấy giá trị lớn nhất từ bảng dim_province
 SET @max_province_id = (SELECT MAX(ID) FROM datawarehouse.dim_province);
 SET @sql = CONCAT('ALTER TABLE temp_data_province AUTO_INCREMENT = ', IFNULL(@max_province_id, 0) + 1);
 PREPARE stmt FROM @sql;
@@ -76,7 +81,9 @@ SET @sql_main_table = CONCAT('ALTER TABLE temp_data_main_table AUTO_INCREMENT = 
 PREPARE stmt_main_table FROM @sql_main_table;
 EXECUTE stmt_main_table;
 DEALLOCATE PREPARE stmt_main_table;
--- Change data type column, caculate and insert data from second-table to temporary tables
+
+
+-- 6.Caculate and insert data from second-table to temporary tables
 INSERT INTO temp_data_province (province)
 SELECT DISTINCT province FROM staging.second_table;
 
@@ -112,13 +119,9 @@ ON DUPLICATE KEY UPDATE
     t4 = VALUES(t4),
     t5 = VALUES(t5);
 		
--- 	Connect to DB data warehouse
--- use datawarehouse;
--- 		Insert temp_data_province, temp_data_weather, temp_data_main_table into
---  to table dim_province, table dim_weather, table fact_main_table 
-
--- Chèn dữ liệu vào bảng datawarehouse.dim_province chỉ nếu giá trị province không tồn tại
-
+		
+		
+-- 7.Insert temp_data_province, temp_data_weather, temp_data_main_table into to table dim_province, table dim_weather, table fact_main_table 
 INSERT INTO datawarehouse.dim_province (ID, province, es_date, ee_date)
 SELECT 
 		tp.ID,
@@ -164,20 +167,14 @@ ORDER BY t1.ID;
 
 
 
--- Insert Table log(control):time:now,process:4, status:successful 
+-- 8.Insert Table log(control):time:now, process_id: 4, status:successful 
 INSERT INTO control.log (time, process_id, status)
 VALUES (NOW(), 4, 'successful ');
     ELSE
+-- 		4.Insert Table log(control):time:now, process:4,status:failed 
         INSERT INTO control.log (time, process_id, status)
         VALUES (NOW(), 4, 'failed');
     END IF;
 END //
 DELIMITER ;
 CALL CheckAndAct();
-
-
-
-
-
-
-
