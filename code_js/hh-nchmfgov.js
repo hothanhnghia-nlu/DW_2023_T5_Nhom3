@@ -105,15 +105,39 @@ function nameFolder() {
     return currentTime;
 }
 
+// Hàm đọc file cấu hình
+function readConfigFile(configFilePath) {
+    try {
+        // Đọc nội dung file cấu hình
+        const configFileContent = fs.readFileSync(configFilePath, 'utf8');
+        // Parse nội dung file thành đối tượng JSON
+        const configData = JSON.parse(configFileContent);
+        return configData;
+    } catch (error) {
+        console.error('Lỗi khi đọc file cấu hình:', error);
+        return null;
+    }
+}
+
 // Hàm chính
 async function main() {
 
-    // Connect DB: control
+    // Đường dẫn tới file cấu hình
+    const configFilePath = 'config.json';
+
+    // 1. Read all info from config.json in same folder with file hh-nchmfgov.js
+    const configData = readConfigFile(configFilePath);
+    if (!configData) {
+        console.error('Không thể đọc file cấu hình. Dừng chương trình.');
+        return;
+    }
+
+    // 2. Connect DB: control
     const connection = mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: 'control'
+        host: configData.host,
+        user: configData.user,
+        password: configData.password,
+        database: configData.database
     });
 
     connection.connect((err) => {
@@ -122,20 +146,35 @@ async function main() {
             main();
             return;
         }else{
-            // Insert Table log(control):time:now, process:1,status:start 
+            console.log("OK");
+            const querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE status = ? and process != ?'
+            var rowCount = 0;
+            var status = 'start';
+            var process = '2';
+
+            // 3. Check all process haven't status start except process 2
+            connection.query(querycheckLog, [status,process], function(err, result) {
+                if (err) throw err;
+                rowCount = result[0].count;
+
+                if(rowCount!=0){
+                    // 4. Close connect DB: control
+                    connection.end();
+                }else{
+                    // 5. Insert Table log(control):time:now, process:1,status:start 
             const queryLog = 'INSERT INTO log VALUES ?';
             var time = new Date();
             var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+ time.getMinutes() + time.getSeconds();
             var process = '1';
             var statuss = 'start';
-            const valueLog = [[id,time, process, statuss]];
+            var valueLog = [[id, time, process, statuss]];
 
             connection.query(queryLog, [valueLog], function(err, result) {
                 if (err) throw err;
                 console.log('Insert log start process 1');
             });
 
-            // Create 2 variable url and folder_data_path and set variable from query: select url, folder_data_path from config where id = 1
+            // 6. Create 2 variable url and folder_data_path and set variable from query: select url, folder_data_path from config where id = 1
             var url = '';
             var folder_data_path = '';
 
@@ -144,19 +183,21 @@ async function main() {
               if (err) throw err;
               
               // Lấy giá trị url và folder_data_path
-              var url = result[0].url;
-              var folder_data_path = result[0].folder_data_path;
-              // Create variable data and Read the html source code from https://www.nchmf.gov.vn/kttv/
+              url = result[0].url;
+              folder_data_path = result[0].folder_data_path;
+              // 7. Create variable data and Read the html source code from https://www.nchmf.gov.vn/kttv/
                 //and save to data the values as the file structure sheet at https://docs.google.com/spreadsheets/d/1rhwfdbb1XzzXN7vASu7-i6Ne-WMouGYbEyskzo-7bcs/edit?usp=sharing
                 
                 var count = 0;
                 fetchDataFromWeb(url).then(data => {
                     console.log('Dữ liệu từ web:', data);
                     count++;
+                    // 9. n<50
                     if(count>50){
-                        
+                        // 10. Close connect DB: control
+                        connection.end();
                     }else if(data == null){
-                        // Update Table log(control): time:now, status: failed
+                        // 8. Update Table log(control): time:now, status: failed
                         var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
                         var process = '1';
                         var staus = 'falied';
@@ -173,9 +214,9 @@ async function main() {
                         const subFolder = `${nameFolder()}`;
                         const FilePath = `${nameFile()}.json`;
                         const folderPath = path.join(folder,subFolder);
-                        // Check folder YY-MM-DD in folder_data_path exist
+                        // 11. Check folder YY-MM-DD in folder_data_path exist
                         if (!fs.existsSync(folderPath)) {
-                            // Create folder YY-MM-DD in folder_data_path
+                            // 12. Create folder YY-MM-DD in folder_data_path
                             fs.mkdirSync(folderPath);
                             console.log('Đã tạo thư mục mới!');
                         } else {
@@ -183,11 +224,12 @@ async function main() {
                         }
                         const outputFilePath = path.join(folder, subFolder, FilePath);
 
-                        // Save data in folder YY-MM-DD with name hh-nchmfgov.json
+                        // 15. n<50
                         for(var i=0;i<50;i++){
+                            // 13. Save data in folder YY-MM-DD with name hh-nchmfgov.json
                             var check = saveDataToFile(data, outputFilePath);
                             if(check){
-                                // Update Table log(control): time:now, status: successful
+                                // 17. Update Table log(control): time:now, status: successful
                                     var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
                                     var process = '1';
                                     var staus = 'successful';
@@ -196,12 +238,12 @@ async function main() {
                                     connection.query(sql, [new Date(), staus, id, process], function(err, result) {
                                     if (err) throw err;
                                     console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                                    // Close connect DB: control
+                                    // 18. Close connect DB: control
                                     connection.end();
                                     });
                                 break;
                             }else{
-                                // Update Table log(control): time:now, status: failed
+                                // 14. Update Table log(control): time:now, status: failed
                                     var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
                                     var process = '1';
                                     var staus = 'failed';
@@ -210,7 +252,7 @@ async function main() {
                                     connection.query(sql, [new Date(), staus, id, process], function(err, result) {
                                     if (err) throw err;
                                     console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                                    // Close connect DB: control
+                                    // 16. Close connect DB: control
                                     connection.end();
                                     });
                             }
@@ -219,7 +261,10 @@ async function main() {
                     }
               
             });
-        })}
+        })
+                }})
+
+            }
     });
      
 }
