@@ -186,7 +186,7 @@ async function main() {
                                                 if (err){
                                                     // 14. Update Table log(control): time:now, status: failed
                                                     var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                                    var process = '.3';
+                                                    var process = '3';
                                                     var staus = 'failed';
                                                     var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
 
