@@ -1,8 +1,22 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
+import axios from "axios";
 
 function Dropdown({selected, setSelected}) {
     const [isActive, setIsActive] = useState(false);
-    const options = ['Hà Nội', 'TP.Hồ Chí Minh', 'Đồng Nai']
+    const [options, setOptions] = useState([]);
+
+    const fetchData = async () => {
+        try {
+            const response = await axios.get(`http://localhost:5000/api/data`);
+            setOptions([response.data.province]);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     return (
         <div className="dropdown">
