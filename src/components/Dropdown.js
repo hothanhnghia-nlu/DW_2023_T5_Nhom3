@@ -7,8 +7,8 @@ function Dropdown({selected, setSelected}) {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/data`);
-            setOptions([response.data.province]);
+            const response = await axios.get(`http://127.0.0.1:5000/api/data`);
+            setOptions(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -30,11 +30,11 @@ function Dropdown({selected, setSelected}) {
                     {options.map((option) => (
                         <div
                             onClick={(e) => {
-                                setSelected(option);
+                                setSelected(option.province);
                                 setIsActive(false);
                             }}
                             className="dropdown-item">
-                            {option}
+                            {option.province}
                         </div>
                     ))}
                 </div>

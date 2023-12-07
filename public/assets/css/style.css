@@ -69,12 +69,14 @@ header {
 
 #status {
     margin-top: 30px;
+    margin-left: 20px;
     float: right;
 }
 
 #status p {
     font-size: 30px;
     font-weight: bold;
+    margin-top: 10px;
 }
 
 #date {
@@ -171,6 +173,7 @@ header {
 
 .card a.info {
     text-decoration: none;
+    cursor: pointer;
 }
 
 .card-city-title {
