@@ -1,18 +1,40 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 
-const WeatherDetail = () => {
+const WeatherDetail = ({id}) => {
     const [data, setData] = useState([]);
-    const id = 2;
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/data/${id}`);
+            const response = await axios.get(`http://127.0.0.1:5000/api/data/${id}`);
             setData(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
+
+    // Get weather icon
+    const getWeatherIcon = (item) => {
+        if (item.weather === 'Nhiều nắng') {
+            return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
+                        height="180"/>;
+        } else if (item.weather === 'Nắng nhẹ') {
+            return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Nhiều mây') {
+            return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Mây rải rác') {
+            return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Mưa rào') {
+            return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
+                        height="200"/>;
+        } else {
+            return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
+                        height="200"/>;
+        }
+    }
 
     useEffect(() => {
         fetchData();
@@ -25,12 +47,11 @@ const WeatherDetail = () => {
                     <div className="row weather-status">
                         <div id="date" className="row-cols-1">
                             <h3>{item.province}</h3>
-                            <h3>{item.day_of_week}</h3>
+                            <h3>{item.day}</h3>
                         </div>
 
                         <div id="status">
-                            <img src="assets/images/weather-icons/cloudy.png" alt="weather forecast" width="200"
-                                 height="200"/>
+                            {getWeatherIcon(item)}
                             <p className="text-center">{item.weather}</p>
                         </div>
                     </div>
