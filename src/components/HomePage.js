@@ -1,15 +1,14 @@
 import React, {useState} from "react";
 import Dropdown from "./Dropdown";
+import {apiUrl, weatherAPI} from "../config/APIConfig";
 
-function Header() {
+function HomePage() {
     const [selected, setSelected] = useState("Chọn Tỉnh/Thành phố");
     return (
         <header>
-            <div className="container">
-                <Dropdown selected={selected} setSelected={setSelected}/>
-            </div>
+                <Dropdown apiUrl={apiUrl} selected={selected} setSelected={setSelected}/>
         </header>
     )
 }
 
-export default Header;
+export default HomePage;

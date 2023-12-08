@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
+import {weatherAPI} from "../config/APIConfig";
 
-const WeatherForecast = ({id}) => {
+const WeatherForecast = ({apiUrl, id}) => {
     const [data, setData] = useState([]);
     const [date, setDate] = useState([]);
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:5000/api/data/${id}`);
+            const response = await axios.get(apiUrl);
             setData(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -16,7 +17,7 @@ const WeatherForecast = ({id}) => {
 
     const fetchDate = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:5000/api/data/date/${id}`);
+            const response = await axios.get(weatherAPI.date(id));
             setDate(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -25,24 +26,25 @@ const WeatherForecast = ({id}) => {
 
     // Get weather icon
     const getWeatherIcon = (item) => {
-        if (item.weather === 'Nhiều nắng') {
-            return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="50"
-                        height="50"/>;
-        } else if (item.weather === 'Nắng nhẹ') {
-            return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="50"
-                        height="50"/>;
-        } else if (item.weather === 'Nhiều mây') {
-            return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="50"
-                        height="50"/>;
-        } else if (item.weather === 'Mây rải rác') {
-            return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="50"
-                        height="50"/>;
-        } else if (item.weather === 'Mưa rào') {
-            return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="50"
-                        height="50"/>;
-        } else {
-            return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="50"
-                        height="50"/>;
+        switch (item.weather) {
+            case 'Nhiều nắng':
+                return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="50"
+                            height="50"/>;
+            case 'Nắng nhẹ':
+                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="50"
+                            height="50"/>;
+            case 'Nhiều mây':
+                return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="50"
+                            height="50"/>;
+            case 'Mây rải rác':
+                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="50"
+                            height="50"/>;
+            case 'Mưa rào':
+                return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="50"
+                            height="50"/>;
+            case 'Mưa dông':
+                return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="50"
+                            height="50"/>;
         }
     }
 
@@ -59,29 +61,36 @@ const WeatherForecast = ({id}) => {
 
     // Get next day
     const getNextDay = (day) => {
-        if (day === '2') {
-            return <h3 className="card-city-title">Thứ Hai</h3>;
-        } else if (day === '3') {
-            return <h3 className="card-city-title">Thứ Ba</h3>;
-        } else if (day === '4') {
-            return <h3 className="card-city-title">Thứ Tư</h3>;
-        } else if (day === '5') {
-            return <h3 className="card-city-title">Thứ Năm</h3>;
-        } else if (day === '6') {
-            return <h3 className="card-city-title">Thứ Sáu</h3>;
-        } else if (day === '7') {
-            return <h3 className="card-city-title">Thứ Bảy</h3>;
-        } else {
-            return <h3 className="card-city-title">Chủ Nhật</h3>;
+        switch (day) {
+            case '2':
+                return <h3 className="card-city-title">Thứ Hai</h3>;
+            case '3':
+                return <h3 className="card-city-title">Thứ Ba</h3>;
+            case '4':
+                return <h3 className="card-city-title">Thứ Tư</h3>;
+            case '5':
+                return <h3 className="card-city-title">Thứ Năm</h3>;
+            case '6':
+                return <h3 className="card-city-title">Thứ Sáu</h3>;
+            case '7':
+                return <h3 className="card-city-title">Thứ Bảy</h3>;
+            case '8':
+                return <h3 className="card-city-title">Chủ Nhật</h3>;
+            default:
+                return <h3 className="card-city-title">Thứ Hai</h3>;
         }
     }
 
     useEffect(() => {
-        fetchData();
-    }, [id]);
+        if (id) {
+            fetchData(id);
+        }
+    }, [apiUrl, id]);
 
     useEffect(() => {
-        fetchDate();
+        if (id) {
+            fetchDate(id);
+        }
     }, [id]);
 
     return (
@@ -95,7 +104,7 @@ const WeatherForecast = ({id}) => {
                                     <div key={index} className="col">
                                         <article className="forecast shadow">
                                             <div className="location-weather">
-                                                <div className="card mb-3">
+                                                <div className="card mb-2">
                                                     <a className="info" href="/">
                                                         {getNextDay(formatDay(day.next_day_1))}
                                                         <div className="card-city-body">
@@ -114,7 +123,7 @@ const WeatherForecast = ({id}) => {
                                     <div className="col">
                                         <article className="forecast shadow">
                                             <div className="location-weather">
-                                                <div className="card mb-3">
+                                                <div className="card mb-2">
                                                     <a className="info" href="/">
                                                         {getNextDay(formatDay(day.next_day_2))}
                                                         <div className="card-city-body">
@@ -133,7 +142,7 @@ const WeatherForecast = ({id}) => {
                                     <div className="col">
                                         <article className="forecast shadow">
                                             <div className="location-weather">
-                                                <div className="card mb-3">
+                                                <div className="card mb-2">
                                                     <a className="info" href="/">
                                                         {getNextDay(formatDay(day.next_day_3))}
                                                         <div className="card-city-body">
@@ -152,7 +161,7 @@ const WeatherForecast = ({id}) => {
                                     <div className="col">
                                         <article className="forecast shadow">
                                             <div className="location-weather">
-                                                <div className="card mb-3">
+                                                <div className="card mb-2">
                                                     <a className="info" href="/">
                                                         {getNextDay(formatDay(day.next_day_4))}
                                                         <div className="card-city-body">
@@ -171,7 +180,7 @@ const WeatherForecast = ({id}) => {
                                     <div className="col">
                                         <article className="forecast shadow">
                                             <div className="location-weather">
-                                                <div className="card mb-3">
+                                                <div className="card mb-2">
                                                     <a className="info" href="/">
                                                         {getNextDay(formatDay(day.next_day_5))}
                                                         <div className="card-city-body">
