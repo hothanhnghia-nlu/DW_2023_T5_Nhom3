@@ -3,6 +3,12 @@ use staging;
 use control;
 use datawarehouse;
 
+-- Insert Table log(control):time:now, process:4,status:start 
+-- INSERT INTO control.log (time, process_id, status)
+-- VALUES (NOW(), 3, 'successful');
+-- INSERT INTO control.log (time, process_id, status)
+-- VALUES (NOW(), 4, 'start'); 
+
 DROP PROCEDURE IF EXISTS CheckAndAct;
 
 DELIMITER //
@@ -37,8 +43,7 @@ VALUES (NOW(), 4, 'start');
 DROP TABLE IF EXISTS temp_data_weather;
 DROP TABLE IF EXISTS temp_data_main_table;
 
--- 5. Create temporary table temp_data_province, temp_data_weather, temp_data_main_table and change data type column
---  to save data from second-table
+-- 5. Create temporary table temp_data_province, temp_data_weather, temp_data_main_table to save data from second-table
 CREATE TEMPORARY TABLE IF NOT EXISTS temp_data_province (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     province TEXT
@@ -83,7 +88,7 @@ EXECUTE stmt_main_table;
 DEALLOCATE PREPARE stmt_main_table;
 
 
--- 6.Caculate and insert data from second-table to temporary tables
+-- 6.Change data type column, caculate and insert data from second-table to temporary tables
 INSERT INTO temp_data_province (province)
 SELECT DISTINCT province FROM staging.second_table;
 
@@ -121,7 +126,7 @@ ON DUPLICATE KEY UPDATE
 		
 		
 		
--- 7.Insert temp_data_province, temp_data_weather, temp_data_main_table into to table dim_province, table dim_weather, table fact_main_table 
+-- 7.Inserttemp_data_province, temp_data_weather, temp_data_main_table into to table dim_province, table dim_weather, table fact_main_table 
 INSERT INTO datawarehouse.dim_province (ID, province, es_date, ee_date)
 SELECT 
 		tp.ID,
@@ -178,3 +183,10 @@ VALUES (NOW(), 4, 'successful ');
 END //
 DELIMITER ;
 CALL CheckAndAct();
+
+
+
+
+
+
+
