@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
+import {weatherAPI} from "../config/APIConfig";
 
-const WeatherDetail = ({id}) => {
+const WeatherDetail = ({apiUrl, id}) => {
     const [data, setData] = useState([]);
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:5000/api/data/${id}`);
+            const response = await axios.get(weatherAPI.weather(id));
             setData(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -15,30 +16,33 @@ const WeatherDetail = ({id}) => {
 
     // Get weather icon
     const getWeatherIcon = (item) => {
-        if (item.weather === 'Nhiều nắng') {
-            return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
-                        height="180"/>;
-        } else if (item.weather === 'Nắng nhẹ') {
-            return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
-                        height="200"/>;
-        } else if (item.weather === 'Nhiều mây') {
-            return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
-                        height="200"/>;
-        } else if (item.weather === 'Mây rải rác') {
-            return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
-                        height="200"/>;
-        } else if (item.weather === 'Mưa rào') {
-            return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
-                        height="200"/>;
-        } else {
-            return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
-                        height="200"/>;
+        switch (item.weather) {
+            case 'Nhiều nắng':
+                return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
+                            height="180"/>;
+            case 'Nắng nhẹ':
+                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
+                            height="200"/>;
+            case 'Nhiều mây':
+                return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
+                            height="200"/>;
+            case 'Mây rải rác':
+                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
+                            height="200"/>;
+            case 'Mưa rào':
+                return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
+                            height="200"/>;
+            case 'Mưa dông':
+                return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
+                            height="200"/>;
         }
     }
 
     useEffect(() => {
-        fetchData();
-    }, [id]);
+        if (id) {
+            fetchData(id);
+        }
+    }, [apiUrl, id]);
 
     return (
         <div id="wrapper" className="col">
