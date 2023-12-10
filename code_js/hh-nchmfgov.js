@@ -119,6 +119,11 @@ function readConfigFile(configFilePath) {
     }
 }
 
+function kiemTra(listUrl) {
+    // Sử dụng phương thức includes để kiểm tra xem có giá trị "a" trong mảng hay không
+    return listUrl.includes("https://www.nchmf.gov.vn/kttv/");
+}
+
 // Hàm chính
 async function main() {
 
@@ -132,7 +137,16 @@ async function main() {
         return;
     }
 
-    // 2. Connect DB: control
+    //2. Check if the file is in the list of allowed data to load
+    var check = kiemTra(configData.list_url);
+    if(check){
+        console.log('Có tên trong danh sách file cần lấy dữ liệu.');
+    }else{
+        console.log('Không có trong danh sách file cần lấy dữ liệu.');
+        return;
+    }
+
+    // 3. Connect DB: control
     const connection = mysql.createConnection({
         host: configData.host,
         user: configData.user,
@@ -143,70 +157,72 @@ async function main() {
     connection.connect((err) => {
         if (err) {
             console.error('Lỗi kết nối MySQL:', err);
-            main();
             return;
         }else{
             console.log("OK");
-            const querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE status = ? and process != ?'
+            const querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE status != ? and process_id = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ?';
             var rowCount = 0;
-            var status = 'start';
-            var process = '2';
+            var status = 'falied';
+            var process = '1';
+            var time = new Date();
+            var hour = time.getHours();
+            var day = time.getDate();
+            var month = time.getMonth()+1;
+            var year = time.getFullYear();
 
-            // 3. Check all process haven't status start except process 2
-            connection.query(querycheckLog, [status,process], function(err, result) {
+            // 4. Check process not exist log successful in now hour
+            connection.query(querycheckLog, [status, process, hour, day, month, year], function(err, result) {
                 if (err) throw err;
                 rowCount = result[0].count;
 
                 if(rowCount!=0){
-                    // 4. Close connect DB: control
+                    // 5. Close connect DB: control
                     connection.end();
                 }else{
-                    // 5. Insert Table log(control):time:now, process:1,status:start 
-            const queryLog = 'INSERT INTO log VALUES ?';
+                    // 6. Insert Table log(control):time:now, process:1,status:start 
+            const queryLog = 'INSERT INTO log (time, process_id, status) VALUES ?';
             var time = new Date();
-            var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+ time.getMinutes() + time.getSeconds();
             var process = '1';
-            var statuss = 'start';
-            var valueLog = [[id, time, process, statuss]];
+            var status = 'start';
+            var valueLog = [[time, process, status]];
 
             connection.query(queryLog, [valueLog], function(err, result) {
                 if (err) throw err;
                 console.log('Insert log start process 1');
             });
 
-            // 6. Create 2 variable url and folder_data_path and set variable from query: select url, folder_data_path from config where id = 1
+            // 7. Create 2 variable url and folder_data_path and set variable from query: select url, folder_data_path from config where process_id = 1 and YEAR(ee_date) = 9999
             var url = '';
             var folder_data_path = '';
 
-            var sql = "SELECT url, folder_data_path FROM config WHERE id = 1";
+            var sql = "SELECT src_path, dest FROM config WHERE process_id = 1 and YEAR(ee_date) = 9999";
             connection.query(sql, function(err, result) {
               if (err) throw err;
               
               // Lấy giá trị url và folder_data_path
-              url = result[0].url;
-              folder_data_path = result[0].folder_data_path;
-              // 7. Create variable data and Read the html source code from https://www.nchmf.gov.vn/kttv/
-                //and save to data the values as the file structure sheet at https://docs.google.com/spreadsheets/d/1rhwfdbb1XzzXN7vASu7-i6Ne-WMouGYbEyskzo-7bcs/edit?usp=sharing
+              url = result[0].src_path;
+              folder_data_path = result[0].dest;
+              // 8.Create variable data and Read the html source code from https://www.nchmf.gov.vn/kttv/
                 
                 var count = 0;
                 fetchDataFromWeb(url).then(data => {
                     console.log('Dữ liệu từ web:', data);
                     count++;
-                    // 9. n<50
-                    if(count>50){
-                        // 10. Close connect DB: control
-                        connection.end();
-                    }else if(data == null){
-                        // 8. Update Table log(control): time:now, status: failed
-                        var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                        var process = '1';
+                    // 9. Update Table log(control): time:now, status: failed
+                    if(data == null){
+                        var time = new Date();
                         var staus = 'falied';
-                        var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
+                        var status = 'start';
+                        var hour = time.getHours();
+                        var date = time.getDate();
+                        var month = time.getMonth()+1;
+                        var year = time.getFullYear();
+                        var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 1 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
   
-                        connection.query(sql, [new Date(), staus, id, process], function(err, result) {
+                        connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
                         if (err) throw err;
                         console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                        // Close connect DB: control
+                        //10. Close connect DB: control
                         connection.end();
                         });
                     }else{
@@ -224,38 +240,42 @@ async function main() {
                         }
                         const outputFilePath = path.join(folder, subFolder, FilePath);
 
-                        // 15. n<50
-                        for(var i=0;i<50;i++){
-                            // 13. Save data in folder YY-MM-DD with name hh-nchmfgov.json
-                            var check = saveDataToFile(data, outputFilePath);
-                            if(check){
-                                // 17. Update Table log(control): time:now, status: successful
-                                    var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                    var process = '1';
-                                    var staus = 'successful';
-                                    var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
-
-                                    connection.query(sql, [new Date(), staus, id, process], function(err, result) {
-                                    if (err) throw err;
-                                    console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                                    // 18. Close connect DB: control
-                                    connection.end();
-                                    });
-                                break;
-                            }else{
-                                // 14. Update Table log(control): time:now, status: failed
-                                    var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                    var process = '1';
-                                    var staus = 'failed';
-                                    var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
-
-                                    connection.query(sql, [new Date(), staus, id, process], function(err, result) {
-                                    if (err) throw err;
-                                    console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                                    // 16. Close connect DB: control
-                                    connection.end();
-                                    });
-                            }
+                        // 13. Save data in folder YY-MM-DD with name hh-nchmfgov.json
+                        var check = saveDataToFile(data, outputFilePath);
+                        if(check){
+                            // 16. Update Table log(control): time:now, status: successful
+                                var time = new Date();
+                                var staus = 'successful';
+                                var status = 'start';
+                                var hour = time.getHours();
+                                var date = time.getDate();
+                                var month = time.getMonth()+1;
+                                var year = time.getFullYear();
+                                var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 1 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
+                                
+                                connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
+                                if (err) throw err;
+                                console.log(`Đã cập nhật ${result.affectedRows} hàng`);
+                                // 17. Close connect DB: control
+                                connection.end();
+                                });
+                        }else{
+                            // 14. Update Table log(control): time:now, status: failed
+                            var time = new Date();
+                            var staus = 'failed';
+                            var status = 'start';
+                            var hour = time.getHours();
+                            var date = time.getDate();
+                            var month = time.getMonth()+1;
+                            var year = time.getFullYear();
+                            var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 1 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
+                            
+                            connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
+                                if (err) throw err;
+                                console.log(`Đã cập nhật ${result.affectedRows} hàng`);
+                                // 15. Close connect DB: control
+                                connection.end();
+                                });
                         }
                         
                     }
