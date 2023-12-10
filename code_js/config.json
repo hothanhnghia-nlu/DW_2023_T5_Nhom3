@@ -3,5 +3,7 @@
     "user": "root",
     "password": "",
     "database": "control",
-    "databasestaging": "staging"
+    "databasestaging": "staging",
+
+    "list_url": ["https://thoitiet.edu.vn/"]
   }
