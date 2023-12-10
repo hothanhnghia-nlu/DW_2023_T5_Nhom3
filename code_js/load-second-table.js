@@ -9,20 +9,6 @@ const readline = require('readline');
 const path = require('path');
 
 
-// Lấy thời gian hiện tại
-function getTime() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1; // Lưu ý: Tháng trong JavaScript bắt đầu từ 0, nên cần +1 để đúng tháng hiện tại.
-    const day = now.getDate();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const seconds = now.getSeconds();
-
-    const currentTime = `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
-    return currentTime;
-}
-
 function nameFile1() {
     const now = new Date();
     const hours = now.getHours();
@@ -63,6 +49,25 @@ function readConfigFile(configFilePath) {
     }
 }
 
+// Lấy thời gian hiện tại
+function getTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // Lưu ý: Tháng trong JavaScript bắt đầu từ 0, nên cần +1 để đúng tháng hiện tại.
+    const day = now.getDate();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    const currentTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    return currentTime;
+}
+
+function kiemTra(listUrl, url) {
+    // Sử dụng phương thức includes để kiểm tra xem có giá trị "a" trong mảng hay không
+    return listUrl.includes(url);
+}
+
 // Hàm chính
 async function main() {
 
@@ -87,84 +92,92 @@ async function main() {
     connection.connect((err) => {
         if (err) {
             console.error('Lỗi kết nối DB control:', err);
-            main();
             return;
         }else{
-            const querycheckLog1 = 'SELECT COUNT(id) as count FROM log WHERE status = ?'
-            const querycheckLog2 = 'SELECT COUNT(id) as count FROM log WHERE process = ? and status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ?';
-            const querycheckLog3 = 'SELECT COUNT(id) as count FROM log WHERE process = ? and status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ?';
-            
-            var rowCount1 = 0;
-            var status1 = 'start';
+            console.error('Kết nối DB control thành công');
+            var url1 = 'https://www.nchmf.gov.vn/kttv/';
+            var url2 = 'https://thoitiet.edu.vn/';
+            var length_list_url = configData.list_url.length;
+            //3. Check if the file named in the list of allowed data loading is successful or not in now hour 
+            if(length_list_url==0){
+                console.log('Close connect DB');
+                //4. Close connect DB: control
+                connection.end();
+            }else{
+                var now = new Date();
+                var hour = now.getHours();
+                var day = now.getDate();
+                var month = now.getMonth() + 1;
+                var year = now.getFullYear();
 
-            var rowCount2 = 0;
-            var rowCount3 = 0;
+                var countQuery = 'SELECT COUNT(id) as count FROM log WHERE process_id = 3 AND status != "falied" AND HOUR(time) = ? AND DAYOFMONTH(time) = ? AND MONTH(time) = ? AND YEAR(time) = ?';
 
-            var process1 = '1';
-            var process2 = '2';
+                // Thực hiện câu truy vấn COUNT
+                connection.query(countQuery, [hour, day, month, year], function (error, results) {
+                    if (error) {
+                        console.error('Lỗi truy vấn COUNT:', error.message);
+                        connection.end();
+                        return;
+                    }
 
-            const now = new Date();
-            var year = now.getFullYear();
-            var month = now.getMonth() + 1; // Lưu ý: Tháng trong JavaScript bắt đầu từ 0, nên cần +1 để đúng tháng hiện tại.
-            var day = now.getDate();
-            var hours = now.getHours();
+                    var countResult = results[0].count;
+                    //3. Check if the file named in the list of allowed data loading is successful or not in now hour
+                    if(countResult!=0){
+                        //4. Close connect DB: control
+                        connection.end();
+                        return;
+                    }
+                    // Kiểm tra nếu count bằng 0 thì thực hiện câu truy vấn chính
+                        var querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE ';
+                        var params = [];
+                        var conditions = [];
 
-            var status = 'successful';
+                        if (kiemTra(configData.list_url, url1)) {
+                            conditions.push('(process_id = 1 AND status = "successful" AND HOUR(time) = ? AND DAYOFMONTH(time) = ? AND MONTH(time) = ? AND YEAR(time) = ?)');
+                            params.push(hour, day, month, year);
+                        }
+                        if (kiemTra(configData.list_url, url2)) {
+                            conditions.push('(process_id = 2 AND status = "successful" AND HOUR(time) = ? AND DAYOFMONTH(time) = ? AND MONTH(time) = ? AND YEAR(time) = ?)');
+                            params.push(hour, day, month, year);
+                        }
 
-            // 3. Check all process haven't status start
-            connection.query(querycheckLog1, [status1], function(err, result) {
-                if (err) throw err;
-                rowCount1 = result[0].count;
-                console.log('rowCount1: '+rowCount1);
+                        if (conditions.length > 0) {
+                            querycheckLog += conditions.join(' OR ');
+                        }
 
-                if(rowCount1!=0){
-                    // 4. Close connect DB: control
-                    connection.end();
-                }else{
-                    // 5. Check process 1 in same hour have status sucessful
-                    connection.query(querycheckLog2,[process1,status,hours,day,month,year], function(err, result){
-                        if (err) throw err;
-                        rowCount2 = result[0].count;
-                        console.log('rowCount2: '+rowCount2);
-                        
-                        if(rowCount2!=1){
-                            // 6. Close connect DB: control
-                            connection.end();
-                        }else{
-                            // 7. Check process 2 in same hour have status sucessful
-                            connection.query(querycheckLog3,[process2,status,hours,day,month,year], function(err, result){
+        //3. Check if the file named in the list of allowed data loading is successful or not in now hour
+        connection.query(querycheckLog, params, function (err, result) {
                                 if(err) throw err;
                                 rowCount3 = result[0].count;
                                 console.log('rowCount3: '+rowCount3);
 
-                                if(rowCount3!=1){
-                                    // 8. Close connect DB: control
+                                if(rowCount3==0){
+                                    // 4. Close connect DB: control
                                     connection.end();
                                 }else{
-                                    // 9. Insert Table log(control):time:now, process:3,status:start 
-                                    const queryLog = 'INSERT INTO log VALUES ?';
+                                    // 5. Insert Table log(control):time:now, process:3,status:start 
+                                    const queryLog = 'INSERT INTO log (time, process_id, status) VALUES ?';
                                     var time = new Date();
-                                    var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+ time.getMinutes() + time.getSeconds();
                                     var process = '3';
                                     var statuss = 'start';
-                                    const valueLog = [[id,time, process, statuss]];
+                                    const valueLog = [[time, process, statuss]];
 
                                     connection.query(queryLog, [valueLog], function(err, result) {
                                         if (err) throw err;
                                         console.log('Insert log start process 3');
                                     });
 
-                                    // Create 1 variable folder_data_path and set variable from query: select folder_data_path from config where id = 2
+                                    // Create 1 variable folder_data_path and set variable from query: select folder_data_path from config where process_id = 2 and YEAR(ee_date) = 9999
                                         var folder_data_path = '';
 
-                                        var sql = "SELECT url, folder_data_path FROM config WHERE id = 2";
+                                        var sql = "SELECT src_path, dest FROM config WHERE process_id = 2 and YEAR(ee_date) = 9999";
                                         connection.query(sql, function(err, result) {
                                         if (err) throw err;
                                         
                                         // Lấy giá trị url và folder_data_path
-                                        folder_data_path = result[0].folder_data_path;
+                                        folder_data_path = result[0].dest
 
-                                        // 10. Connect DB: staging
+                                        // 6. Connect DB: staging
                                     const connection2 = mysql.createConnection({
                                         host: configData.host,
                                         user: configData.user,
@@ -175,33 +188,37 @@ async function main() {
                                     connection2.connect((err) =>{
                                         if (err) {
                                             console.error('Lỗi kết nối DB staging:', err);
-                                            // 11. Close connect DB: control
+                                            // 7. Close connect DB: control
                                             connection.end();
                                             return;
                                         }else{
-                                            // 12. Write SQL command to delete all data in second table
-                                            const querytruncate = 'TRUNCATE TABLE `second-table`';
-                                            // 13. Run SQL command
+                                            // 8. Write SQL command to delete all data in second table
+                                            const querytruncate = 'TRUNCATE TABLE `second_table`';
+                                            // 9. Run SQL command
                                             connection2.query(querytruncate,[],function(err, result){
                                                 if (err){
-                                                    // 14. Update Table log(control): time:now, status: failed
-                                                    var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                                    var process = '3';
-                                                    var staus = 'failed';
-                                                    var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
-
-                                                    connection.query(sql, [new Date(), staus, id, process], function(err, result) {
+                                                    // 10. Update Table log(control): time:now, status: failed
+                                                    var time = new Date();
+                                                    var staus = 'falied';
+                                                    var status = 'start';
+                                                    var hour = time.getHours();
+                                                    var date = time.getDate();
+                                                    var month = time.getMonth()+1;
+                                                    var year = time.getFullYear();
+                                                    var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 3 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
+                              
+                                                    connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
                                                     if (err) throw err;
                                                     console.log(`Đã cập nhật ${result.affectedRows} hàng`);
-                                                    // 15. Close connect DB: control
+                                                    // 11. Close connect DB: control
                                                     connection.end();
+                                                    return;
                                                     });
                                                 }else{
-                                                    // 16. Create variable newestFileUrl1, newestFileUrl2
+                                                    // 12. Create variable to assign path json file data
                                                     var newestFileUrl1;
                                                     var newestFileUrl2;
 
-                                                    // 17. Assign value to newestFileUrl1 with path file hh-nchmfgov.json and newestFileUrl2 with path file hh-nchmfgov.json, hh-thoitietedu.json
                                                     const folder = folder_data_path;
                                                     const subFolder = `${nameFolder()}`;
                                                     const FilePath1 = `${nameFile1()}.json`;
@@ -215,48 +232,69 @@ async function main() {
                                                     newestFileUrl1 = outputFilePath1;
                                                     newestFileUrl2 = outputFilePath2;
 
-                                                    const jsonData1 = JSON.parse(fs.readFileSync(newestFileUrl1, 'utf8'));
-                                                    const jsonData2 = JSON.parse(fs.readFileSync(newestFileUrl2, 'utf8'));
+                                                    var time = getTime();
 
-                                                    // 18. Insert json data from file with path: newestFileUrl1 and newestFileUrl2 with corresponding columns in second-table in DB staging
-                                                    const query = 'INSERT INTO `second-table` (time, province, temperature, weather, humidity, t1, t2, t3, t4, t5, source) VALUES ?';
-                                                    var source1 = 'https://nchmf.gov.vn/kttv/';
-                                                    var source2 = 'https://thoitiet.edu.vn';
-                                                    const values1 = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], source1]);
-                                                    const values2 = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], source2]);
-                                                    var values = values1.map((item, index) => [...item, ...values2[index]]);
-      
+                                                    if(kiemTra(configData.list_url, url1)&&kiemTra(configData.list_url, url2)){
+                                                        console.log('url 1&2');
+                                                        const jsonData1 = JSON.parse(fs.readFileSync(newestFileUrl1, 'utf8'));
+                                                        const jsonData2 = JSON.parse(fs.readFileSync(newestFileUrl2, 'utf8'));
+                                                        const values1 = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url1]);
+                                                        const values2 = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url2]);
+                                                        var values = values1.map((item, index) => [...item, ...values2[index]]);
+                                                    }
+                                                    if(kiemTra(configData.list_url, url1)){
+                                                        console.log('url 1');
+                                                        const jsonData1 = JSON.parse(fs.readFileSync(newestFileUrl1, 'utf8'));
+                                                        var values = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url1]);
+                                                    }
+                                                    if(kiemTra(configData.list_url, url2)){
+                                                        console.log('url 2');
+                                                        const jsonData2 = JSON.parse(fs.readFileSync(newestFileUrl2, 'utf8'));
+                                                        var values = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url2]);
+                                                    }
+
+                                                    // 13. Insert json data from file json to second-table in DB staging
+                                                    const query = 'INSERT INTO second_table (time, province, temperature, weather, humidity, t1, t2, t3, t4, t5, source) VALUES ?';
+                                                                                                        
                                                     connection2.query(query, [values], (err, result) => {
                                                         if (err) {
                                                             console.error('Lỗi thêm dữ liệu:', err);
-                                                           // 19. Update Table log(control): time:now, status: failed
-                                                           var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                                           var process = '3';
-                                                           var staus = 'failed';
-                                                           var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
-
-                                                           connection.query(sql, [new Date(), staus, id, process], function(err, result) {
+                                                           // 14. Update Table log(control):time:now, status:failed 
+                                                           var time = new Date();
+                                                           var staus = 'falied';
+                                                           var status = 'start';
+                                                           var hour = time.getHours();
+                                                           var date = time.getDate();
+                                                           var month = time.getMonth()+1;
+                                                           var year = time.getFullYear();
+                                                           var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 3 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
+                                     
+                                                           connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
                                                            if (err) throw err;
                                                            })
-                                                           // 20. Close connect DB: control, staging
+                                                           // 15. Close connect DB: control, staging
                                                            connection.end();
                                                            connection2.end();
                                                             return;
                                                         }
                                                         console.log(`${result.affectedRows} bản ghi đã được thêm vào cơ sở dữ liệu`);
                                                         
-                                                        // 21. Update Table log(control): time:now, status: successful
-                                                        var id = ''+ time.getFullYear() + time.getMonth() + time.getDate() + time.getHours()+'%';
-                                                        var process = '3';
+                                                        // 16. Update Table log(control):time:now, status:successful 
+                                                        var time = new Date();
                                                         var staus = 'successful';
-                                                        var sql = `UPDATE log SET time = ?, status = ? WHERE id LIKE ? AND process = ?`;
-
-                                                        connection.query(sql, [new Date(), staus, id, process], function(err, result) {
+                                                        var status = 'start';
+                                                        var hour = time.getHours();
+                                                        var date = time.getDate();
+                                                        var month = time.getMonth()+1;
+                                                        var year = time.getFullYear();
+                                                        var sql = `UPDATE log SET time = ?, status = ? WHERE id = (SELECT id FROM log WHERE process_id = 3 AND status = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ? )`;
+  
+                                                    connection.query(sql, [time, staus, status, hour, date, month, year], function(err, result) {
                                                         if (err) throw err;
                                                         console.log(`Đã cập nhật ${result.affectedRows} hàng`);
                                                         console.log('Record inserted:', result);
                                                         })
-                                                        // Close connect DB: control, staging
+                                                        // 17. Close connect DB: control, staging
                                                         connection2.end();
                                                         connection.end();
                                                     });
@@ -265,15 +303,16 @@ async function main() {
                                         }
                                     })
                                 })}
-                            })
-                        }
-                    })
-                }})
+            })
+        
+        }
+    )
+}}})}
 
-            }
-    });
+            
+  
      
-}
+
 
 // Chạy chương trình chính
 main();
