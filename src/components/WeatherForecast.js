@@ -11,7 +11,7 @@ const WeatherForecast = ({apiUrl, id}) => {
             const response = await axios.get(apiUrl);
             setData(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching data: ', error);
         }
     };
 
@@ -20,29 +20,34 @@ const WeatherForecast = ({apiUrl, id}) => {
             const response = await axios.get(weatherAPI.date(id));
             setDate(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching data: ', error);
         }
     };
 
     // Get weather icon
     const getWeatherIcon = (item) => {
         switch (item.weather) {
-            case 'Nhiều nắng':
+            case 'Ít mây, trời nắng':
                 return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="50"
                             height="50"/>;
-            case 'Nắng nhẹ':
-                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="50"
+
+            case 'Mây thay đổi, trời nắng':
+                return <img src="assets/images/weather-icons/cloudy.png" alt="mild sunshine" width="50"
                             height="50"/>;
-            case 'Nhiều mây':
+
+            case 'Nhiều mây, không mưa':
                 return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="50"
                             height="50"/>;
-            case 'Mây rải rác':
-                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="50"
+
+            case 'Đêm có mây':
+                return <img src="assets/images/weather-icons/moon_cloudy.png" alt="moon cloudy" width="50"
                             height="50"/>;
-            case 'Mưa rào':
+
+            case 'Có mưa rào':
                 return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="50"
                             height="50"/>;
-            case 'Mưa dông':
+
+            case 'Có mưa rào và dông':
                 return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="50"
                             height="50"/>;
         }
@@ -51,33 +56,11 @@ const WeatherForecast = ({apiUrl, id}) => {
     // Format datetime
     const formatDay = (date) => {
         try {
-            const options = { day: 'numeric' };
+            const options = { weekday: 'long' };
             return new Intl.DateTimeFormat('vi-VN', options).format(new Date(date));
         } catch (error) {
-            console.error('Error parsing date:', error);
+            console.error('Error parsing date: ', error);
             return 'Invalid date';
-        }
-    }
-
-    // Get next day
-    const getNextDay = (day) => {
-        switch (day) {
-            case '2':
-                return <h3 className="card-city-title">Thứ Hai</h3>;
-            case '3':
-                return <h3 className="card-city-title">Thứ Ba</h3>;
-            case '4':
-                return <h3 className="card-city-title">Thứ Tư</h3>;
-            case '5':
-                return <h3 className="card-city-title">Thứ Năm</h3>;
-            case '6':
-                return <h3 className="card-city-title">Thứ Sáu</h3>;
-            case '7':
-                return <h3 className="card-city-title">Thứ Bảy</h3>;
-            case '8':
-                return <h3 className="card-city-title">Chủ Nhật</h3>;
-            default:
-                return <h3 className="card-city-title">Thứ Hai</h3>;
         }
     }
 
@@ -105,8 +88,8 @@ const WeatherForecast = ({apiUrl, id}) => {
                                         <article className="forecast shadow">
                                             <div className="location-weather">
                                                 <div className="card mb-2">
-                                                    <a className="info" href="/">
-                                                        {getNextDay(formatDay(day.next_day_1))}
+                                                    <a className="info">
+                                                        <h3 className="card-city-title">{formatDay(day.next_day_1)}</h3>
                                                         <div className="card-city-body">
                                                             {getWeatherIcon(item)}
                                                         </div>
@@ -124,8 +107,8 @@ const WeatherForecast = ({apiUrl, id}) => {
                                         <article className="forecast shadow">
                                             <div className="location-weather">
                                                 <div className="card mb-2">
-                                                    <a className="info" href="/">
-                                                        {getNextDay(formatDay(day.next_day_2))}
+                                                    <a className="info">
+                                                        <h3 className="card-city-title">{formatDay(day.next_day_2)}</h3>
                                                         <div className="card-city-body">
                                                             {getWeatherIcon(item)}
                                                         </div>
@@ -143,8 +126,8 @@ const WeatherForecast = ({apiUrl, id}) => {
                                         <article className="forecast shadow">
                                             <div className="location-weather">
                                                 <div className="card mb-2">
-                                                    <a className="info" href="/">
-                                                        {getNextDay(formatDay(day.next_day_3))}
+                                                    <a className="info">
+                                                        <h3 className="card-city-title">{formatDay(day.next_day_3)}</h3>
                                                         <div className="card-city-body">
                                                             {getWeatherIcon(item)}
                                                         </div>
@@ -162,8 +145,8 @@ const WeatherForecast = ({apiUrl, id}) => {
                                         <article className="forecast shadow">
                                             <div className="location-weather">
                                                 <div className="card mb-2">
-                                                    <a className="info" href="/">
-                                                        {getNextDay(formatDay(day.next_day_4))}
+                                                    <a className="info">
+                                                        <h3 className="card-city-title">{formatDay(day.next_day_4)}</h3>
                                                         <div className="card-city-body">
                                                             {getWeatherIcon(item)}
                                                         </div>
@@ -181,8 +164,8 @@ const WeatherForecast = ({apiUrl, id}) => {
                                         <article className="forecast shadow">
                                             <div className="location-weather">
                                                 <div className="card mb-2">
-                                                    <a className="info" href="/">
-                                                        {getNextDay(formatDay(day.next_day_5))}
+                                                    <a className="info">
+                                                        <h3 className="card-city-title">{formatDay(day.next_day_5)}</h3>
                                                         <div className="card-city-body">
                                                             {getWeatherIcon(item)}
                                                         </div>

@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import axios from "axios";
 import {weatherAPI} from "../config/APIConfig";
 
-const WeatherDetail = ({apiUrl, id}) => {
+const WeatherDetail = ({apiUrl, id, weatherData}) => {
     const [data, setData] = useState([]);
 
     const fetchData = async () => {
@@ -10,31 +10,47 @@ const WeatherDetail = ({apiUrl, id}) => {
             const response = await axios.get(weatherAPI.weather(id));
             setData(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching data: ', error);
         }
     };
 
     // Get weather icon
     const getWeatherIcon = (item) => {
         switch (item.weather) {
-            case 'Nhiều nắng':
+            case 'Ít mây, trời nắng':
                 return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
                             height="180"/>;
-            case 'Nắng nhẹ':
-                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
+
+            case 'Mây thay đổi, trời nắng':
+                return <img src="assets/images/weather-icons/cloudy.png" alt="mild sunshine" width="200"
                             height="200"/>;
-            case 'Nhiều mây':
+
+            case 'Nhiều mây, không mưa':
                 return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
                             height="200"/>;
-            case 'Mây rải rác':
-                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
+
+            case 'Đêm có mây':
+                return <img src="assets/images/weather-icons/moon_cloudy.png" alt="moon cloudy" width="200"
                             height="200"/>;
-            case 'Mưa rào':
+
+            case 'Có mưa rào':
                 return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
                             height="200"/>;
-            case 'Mưa dông':
+
+            case 'Có mưa rào và dông':
                 return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
                             height="200"/>;
+        }
+    }
+
+    // Format datetime
+    const formatDay = (date) => {
+        try {
+            const options = { weekday: 'long' };
+            return new Intl.DateTimeFormat('vi-VN', options).format(new Date(date));
+        } catch (error) {
+            console.error('Error parsing date: ', error);
+            return 'Invalid date';
         }
     }
 
@@ -51,7 +67,7 @@ const WeatherDetail = ({apiUrl, id}) => {
                     <div className="row weather-status">
                         <div id="date" className="row-cols-1">
                             <h3>{item.province}</h3>
-                            <h3>{item.day}</h3>
+                            <h3>{formatDay(item.time)}</h3>
                         </div>
 
                         <div id="status">

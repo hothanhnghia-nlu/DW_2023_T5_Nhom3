@@ -15,7 +15,7 @@ function Dropdown({apiUrl, selected, setSelected}) {
             const response = await axios.get(apiUrl);
             setOptions(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error fetching data: ', error);
         }
     };
 
@@ -28,7 +28,7 @@ function Dropdown({apiUrl, selected, setSelected}) {
             const response = await axios.get(weatherAPI.weather(selectedId));
             setWeatherData(response.data);
         } catch (error) {
-            console.error('Error fetching weather data:', error);
+            console.error('Error fetching weather data: ', error);
         }
     };
 
