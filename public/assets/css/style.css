@@ -21,11 +21,11 @@ header {
 
 .dropdown .dropdown-btn {
     padding: 15px 20px;
-    background: deepskyblue;
+    background: white;
     box-shadow: 3px 3px 10px 6px rgba(0, 0, 0, 0.06);
     border-radius: 15px;
     font-weight: bold;
-    color: yellow;
+    color: blue;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -42,7 +42,7 @@ header {
     font-weight: 500;
     color: #333;
     width: 100%;
-    max-height: 110px;
+    max-height: 140px;
     overflow-y: auto;
 }
 
