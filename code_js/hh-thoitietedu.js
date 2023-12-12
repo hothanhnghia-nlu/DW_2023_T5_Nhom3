@@ -56,7 +56,7 @@ async function fetchDataFromWeb(url) {
 
                     const data = {
                         province: $('li.breadcrumb-item:nth-child(2) a').text(),
-                        temperature: temperature,
+                        temperature: temperature.replace("°C",""),
                         weather: wea,
                         humidity: humidity,
                         T: temp_bright_arr
