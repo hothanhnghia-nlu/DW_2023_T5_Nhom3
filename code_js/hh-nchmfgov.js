@@ -33,12 +33,12 @@ async function fetchDataFromWeb(url) {
                     const hum = $('ul.list-info-wt.uk-list li:nth-child(3) div.uk-width-3-4').text().replace(": ", "");
                     const humidity = hum.substring(0, hum.indexOf(':'));
                     const temp_bright_arr = $('span.large-temp').text().split("C");
-                    let temp_bright = temp_bright_arr.map(item => item + "C");
+                    let temp_bright = temp_bright_arr.map(item => item.replace("°C",""));
                     temp_bright.pop();
                     temp_bright = temp_bright.slice(0, 5); // Lấy 5 phần tử đầu tiên
                     const data = {
                         province: $('h1.tt-news').text().replace("Thời tiết ", ""),
-                        temperature: temperature,
+                        temperature: temperature.replace("°C",""),
                         weather: weather,
                         humidity: humidity,
                         T: temp_bright
