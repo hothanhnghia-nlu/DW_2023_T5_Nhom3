@@ -4,10 +4,11 @@ use staging;
 use control;
 
 use datawarehouse;
-
+-- 2.Drop procedure InsertToMain if exist
 DROP PROCEDURE IF EXISTS InsertToMain;
 
 DELIMITER / / 
+-- 3.CREATE PROCEDURE InsertToMain
 CREATE PROCEDURE InsertToMain() 
     BEGIN 
         DECLARE recordCount INT;
@@ -36,13 +37,13 @@ CREATE PROCEDURE InsertToMain()
             process_id = 4
             AND status = 'successful'
             AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H');
-        -- 2.Check exist in log table has log: process_id: 3, status: successful, in the same hour
+        -- 5.Check exist in log table has log: process_id: 3, status: successful, in the same hour
         IF recordCount > 0 THEN 
-                -- 3.Check not exist in log table has log: process_id: 4, status: start in the same hour
+                -- 6.Check not exist in log table has log: process_id: 4, status: start in the same hour
                 IF runningCount = 0 THEN 
-                    -- 4.Check not exist in log table has log: process_id: 4, status: successful in the same hour
+                    -- 7.Check not exist in log table has log: process_id: 4, status: successful in the same hour
                     IF successfulCount = 0 THEN
-                        -- 5. Insert Table log(control):time:now, process:4,status:start 
+                        -- 8. Insert Table log(control):time:now, process:4,status:start 
                         INSERT INTO control.log (time, process_id, status)
                         VALUES (NOW(), 4, 'start');
 
@@ -52,7 +53,7 @@ CREATE PROCEDURE InsertToMain()
 
                         DROP TABLE IF EXISTS temp_data_main_table;
 
-                        -- 6. Create temporary table temp_data_province, temp_data_weather, temp_data_main_table 
+                        -- 9. Create temporary table temp_data_province, temp_data_weather, temp_data_main_table 
                         -- to save data from second-table
                         CREATE TEMPORARY TABLE IF NOT EXISTS temp_data_province (
                             ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -97,14 +98,14 @@ CREATE PROCEDURE InsertToMain()
                         EXECUTE stmt_main_table;
                         DEALLOCATE PREPARE stmt_main_table;
 
-                        -- 7.Change data type column caculate and insert data from second-table to temporary tables
+                        -- 10.Change data type column caculate and insert data from second-table to temporary tables
                         BEGIN 
                         DECLARE continueHandler INT DEFAULT 1;
 
                         -- Bắt lỗi và ghi log nếu có lỗi khi insert dữ liệu
                         DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
                         BEGIN
-                        -- 8.Update Table log(control):time:now, process_id:4,status:failed 
+                        -- 11.Update Table log(control):time:now, process_id:4,status:failed 
                         UPDATE control.log SET time = NOW(), status = 'failed' WHERE id = (SELECT id FROM control.log WHERE process_id = 4 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'));
                         SET continueHandler = 0;-- Đặt flag để ngừng thực hiện các câu lệnh tiếp theo
                         END;
@@ -138,7 +139,7 @@ CREATE PROCEDURE InsertToMain()
                             st.time,
                             st.province;
 
-						-- 9.Insert temp_data_province, temp_data_weather, temp_data_main_table into to table dim_province,
+						-- 12.Insert temp_data_province, temp_data_weather, temp_data_main_table into to table dim_province,
                         -- table dim_weather, table fact_main_table 
                         BEGIN 
                         DECLARE continueHandler INT DEFAULT 1;
@@ -146,7 +147,7 @@ CREATE PROCEDURE InsertToMain()
                         -- Bắt lỗi và ghi log nếu có lỗi khi insert dữ liệu
                         DECLARE CONTINUE HANDLER FOR SQLEXCEPTION 
                         BEGIN
-                        -- 10.Update Table log(control):time:now, process_id:4,status:failed 
+                        -- 13.Update Table log(control):time:now, process_id:4,status:failed 
                         UPDATE control.log SET time = NOW(), status = 'failed' WHERE id = (SELECT id FROM control.log WHERE process_id = 4 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'));
 
                         SET continueHandler = 0;
@@ -202,7 +203,7 @@ CREATE PROCEDURE InsertToMain()
                         ORDER BY
                             t1.ID;
 
-						-- 11.Update Table log(control):time:now, process_id: 4, status:successful 
+						-- 14.Update Table log(control):time:now, process_id: 4, status:successful 
                         UPDATE control.log SET time = NOW(), status = 'successful'
                         WHERE id = (SELECT id FROM control.log WHERE process_id = 4 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'));
 														
@@ -216,5 +217,5 @@ CREATE PROCEDURE InsertToMain()
 
     END / / 
 DELIMITER;
-
+-- 4.Call procedure InsertToMain
 CALL InsertToMain();

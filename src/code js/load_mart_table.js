@@ -201,21 +201,21 @@ async function main() {
 
                             let successMessageDisplayed = false;
                             try {
-                                // 11. Call to run function to truncate all data in all tables of datamart
+                                // 12. Call to run function to truncate all data in all tables of datamart
                                 const truncateData = await truncateTables(connectionDatamart);
-                                // 14. Check result of function truncate
+                                // 15. Check result of function truncate
                                 for (const result of truncateData) {
                                     if (result.success) {
                                         if (!successMessageDisplayed) {
                                             console.log('Xóa thành công');
                                             successMessageDisplayed = true;
                                             try {
-                                                // 17. Connect to DB datawarehouse
+                                                // 18. Connect to DB datawarehouse
                                                 const connectionDatawarehouse = await connectToDataWarehouse();
 
                                                 console.log("Đã kết nối DB Warehouse");
                                                 try {
-                                                    // 19. Call to run function insert table dim_province, dim_weather, fact_main_table to mart
+                                                    // 21. Call to run function insert table dim_province, dim_weather, fact_main_table to mart
                                                     const dimProvinceInsertResult =
                                                         await insertDataToMart(
                                                             connectionDatawarehouse,
@@ -235,14 +235,14 @@ async function main() {
                                                             "datawarehouse.fact_main_table",
                                                             "datamart.fact_main_table"
                                                         );
-                                                    // 22. Check result insert table dim_province, dime_weather, fact_main_table are true
+                                                    // 24. Check result insert table dim_province, dime_weather, fact_main_table are true
                                                     if (
                                                         dimProvinceInsertResult &&
                                                         dimWeatherInsertResult &&
                                                         factMainTableInsertResult
                                                     ) {
                                                         console.log('Chuyển thành công');
-                                                        // 25.Update Table log(control):time:now, process_id:5,status:successful
+                                                        // 27.Update Table log(control):time:now, process_id:5,status:successful
                                                         const queryLogSuccess =
                                                             "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
                                                         const status = "successful";
@@ -251,13 +251,13 @@ async function main() {
                                                             if (error) throw error;
                                                             console.log("Update log process: 5");
                                                         });
-                                                        // 26. Close connect to DB datawarehouse, DB datamart, DB control
+                                                        // 28. Close connect to DB datawarehouse, DB datamart, DB control
                                                         await connectionDatawarehouse.end();
                                                         await connectionDatamart.end();
                                                         await connectionControl.end();
                                                     } else {
                                                         console.log('Chuyển thất bại');
-                                                        // 23.Update Table log(control):time:now, process_id:5,status:failed
+                                                        // 25.Update Table log(control):time:now, process_id:5,status:failed
                                                         const queryLogFail =
                                                             "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
                                                         const status = "failed";
@@ -268,7 +268,7 @@ async function main() {
                                                         });
 
 
-                                                        // 24. Close connect to DB datawarehouse, DB datamart, DB control
+                                                        // 26. Close connect to DB datawarehouse, DB datamart, DB control
                                                         await connectionDatawarehouse.end();
                                                         await connectionDatamart.end();
                                                         await connectionControl.end();
@@ -276,7 +276,7 @@ async function main() {
 
                                                 } catch (error) {
                                                     console.error("Error during migration:", error);
-                                                    // 20.Update Table log(control):time:now, process_id:5,status:failed
+                                                    // 22.Update Table log(control):time:now, process_id:5,status:failed
                                                     const queryLogFail1 =
                                                         "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
                                                     const status = "failed";
@@ -286,7 +286,7 @@ async function main() {
                                                         console.log("Update log process: 5");
                                                     });
                                                     // // Đảm bảo đóng kết nối sau khi hoàn thành công việc
-                                                    // 21. Close connect to DB datawarehouse, DB datamart, DB control
+                                                    // 23. Close connect to DB datawarehouse, DB datamart, DB control
                                                     await connectionDatawarehouse.end();
                                                     await connectionDatamart.end();
                                                     await connectionControl.end();
@@ -298,7 +298,16 @@ async function main() {
                                             } catch (datawarehouseError) {
                                                 console.error('Lỗi trong quá trình làm việc với DataWarehouse:', datawarehouseError);
                                                 // Xử lý lỗi khi kết nối đến Datawarehouse thất bại
-                                                // 18. Close connect to DB datamart, DB control
+                                                // 19.Update Table log(control):time:now, process_id:5,status:failed
+                                                const queryLogFail =
+                                                    "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
+                                                const status = "failed";
+                                                const valuesLogFail = [status];
+                                                connectionControl.query(queryLogFail, valuesLogFail, (error, results) => {
+                                                    if (error) throw error;
+                                                    console.log("Update log process: 5");
+                                                });
+                                                // 20. Close connect to DB datamart, DB control
                                                 await connectionDatamart.end();
                                                 await connectionControl.end();
                                             }
@@ -306,7 +315,7 @@ async function main() {
                                         }
                                     } else {
                                         console.log(`Xóa lỗi cho bảng ${result.tableName}: ${result.error}`);
-                                        // 15.Update Table log(control):time:now, process_id:5,status:failed
+                                        // 16.Update Table log(control):time:now, process_id:5,status:failed
                                         const queryLogFail =
                                             "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
                                         const status = "failed";
@@ -315,14 +324,14 @@ async function main() {
                                             if (error) throw error;
                                             console.log("Update log process: 5");
                                         });
-                                        // 16. Close connect to DB datamart, DB control
+                                        // 17. Close connect to DB datamart, DB control
                                         await connectionDatamart.end();
                                         await connectionControl.end();
                                     }
                                 }
                             } catch (error) {
                                 console.error("Error during truncation:", error);
-                                // 12.Update Table log(control):time:now, process_id:5,status:failed
+                                // 13.Update Table log(control):time:now, process_id:5,status:failed
                                 const queryLogFail =
                                     "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
                                 const status = "failed";
@@ -331,7 +340,7 @@ async function main() {
                                     if (error) throw error;
                                     console.log("Update log process: 5");
                                 });
-                                // 13. Close connect to DB datamart, DB control
+                                // 14. Close connect to DB datamart, DB control
                                 await connectionDatamart.end();
                                 await connectionControl.end();
                             }
@@ -341,7 +350,16 @@ async function main() {
                         } catch (datamartError) {
                             console.error('Lỗi trong quá trình làm việc với Datamart:', datamartError);
                             // Xử lý lỗi khi kết nối đến Datamart thất bại
-                            // 10. Close connect to DB control
+                            // 10.Update Table log(control):time:now, process_id:5,status:failed
+                            const queryLogFail =
+                                "UPDATE control.log SET time = NOW(), status = ? WHERE id = (SELECT id FROM control.log WHERE process_id = 5 AND status = 'start' AND DATE_FORMAT(time, '%Y-%m-%d %H') = DATE_FORMAT(NOW(), '%Y-%m-%d %H'))";
+                            const status = "failed";
+                            const valuesLogFail = [status];
+                            connectionControl.query(queryLogFail, valuesLogFail, (error, results) => {
+                                if (error) throw error;
+                                console.log("Update log process: 5");
+                            });
+                            // 11. Close connect to DB control
                             await connectionControl.end();
                         }
                     } else {
