@@ -59,7 +59,7 @@ function getTime() {
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
 
-    const currentTime = `${hours}-${minutes}-${seconds} ${day}:${month}:${year}`;
+    const currentTime = `${hours}:${minutes}:${seconds} ${day}:${month}:${year}`;
     return currentTime;
 }
 
