@@ -27,27 +27,35 @@ const WeatherForecast = ({apiUrl, id}) => {
     // Get weather icon
     const getWeatherIcon = (item) => {
         switch (item.weather) {
-            case 'Ít mây, trời nắng':
+            case 'Bầu trời quang đãng':
                 return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="50"
                             height="50"/>;
 
-            case 'Mây thay đổi, trời nắng':
-                return <img src="assets/images/weather-icons/cloudy.png" alt="mild sunshine" width="50"
+            case 'Mây rải rác':
+                return <img src="assets/images/weather-icons/mid_sunshine.png" alt="mild sunshine" width="50"
                             height="50"/>;
 
-            case 'Nhiều mây, không mưa':
+            case 'Mây thưa':
+                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="50"
+                            height="50"/>;
+
+            case 'Mây cụm':
                 return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="50"
                             height="50"/>;
 
-            case 'Đêm có mây':
-                return <img src="assets/images/weather-icons/moon_cloudy.png" alt="moon cloudy" width="50"
+            case 'Mây đen u ám':
+                return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="50"
                             height="50"/>;
 
-            case 'Có mưa rào':
+            case 'Mưa vừa':
                 return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="50"
                             height="50"/>;
 
-            case 'Có mưa rào và dông':
+            case 'Mưa nhẹ':
+                return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="50"
+                            height="50"/>;
+
+            case 'Mưa dông':
                 return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="50"
                             height="50"/>;
         }
