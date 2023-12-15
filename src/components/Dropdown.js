@@ -8,7 +8,7 @@ function Dropdown({apiUrl, selected, setSelected}) {
     const [isActive, setIsActive] = useState(false);
     const [options, setOptions] = useState([]);
     const [weatherData, setWeatherData] = useState([]);
-    const [selectedId, setSelectedId] = useState(2);
+    const [selectedId, setSelectedId] = useState(23);
 
     const fetchData = async () => {
         try {
