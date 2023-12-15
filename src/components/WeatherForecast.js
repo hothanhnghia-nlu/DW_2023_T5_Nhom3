@@ -32,7 +32,7 @@ const WeatherForecast = ({apiUrl, id}) => {
                             height="50"/>;
 
             case 'Mây rải rác':
-                return <img src="assets/images/weather-icons/mid_sunshine.png" alt="mild sunshine" width="50"
+                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="50"
                             height="50"/>;
 
             case 'Mây thưa':
@@ -57,6 +57,10 @@ const WeatherForecast = ({apiUrl, id}) => {
 
             case 'Mưa dông':
                 return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="50"
+                            height="50"/>;
+
+            case 'Đêm có mây':
+                return <img src="assets/images/weather-icons/moon_cloudy.png" alt="thunderstorm" width="50"
                             height="50"/>;
         }
     }
