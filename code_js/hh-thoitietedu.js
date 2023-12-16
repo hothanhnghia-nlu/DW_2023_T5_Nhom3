@@ -178,7 +178,7 @@ async function main() {
             console.error('Lỗi kết nối MySQL:', err);
             return;
         }else{
-            const querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE status != ? and process_id != ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ?';
+            const querycheckLog = 'SELECT COUNT(id) as count FROM log WHERE status != ? and process_id = ? and HOUR(time) = ? and DAYOFMONTH(time) = ? and MONTH(time) = ? and YEAR(time) = ?';
             var rowCount = 0;
             var status = 'falied';
             var process = '2';
@@ -194,6 +194,7 @@ async function main() {
                 rowCount = result[0].count;
 
                 if(rowCount!=0){
+                    console.log("da thuc hien read du lieu");
                     // 5. Close connect DB: control
                     connection.end();
                 }else{
