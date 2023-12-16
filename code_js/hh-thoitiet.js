@@ -134,7 +134,7 @@ async function main() {
     // Đường dẫn tới file cấu hình
     const configFilePath = 'config.json';
 
-    // 1. Read all info from config.json in same folder with file hh-nchmfgov.js
+    // 1. Read all info from config.json in same folder with file hh-thoitiet.js
     const configData = readConfigFile(configFilePath);
     if (!configData) {
         console.error('Không thể đọc file cấu hình. Dừng chương trình.');
@@ -244,7 +244,7 @@ async function main() {
                         }
                         const outputFilePath = path.join(folder, subFolder, FilePath);
 
-                        // 13. Save data in folder YY-MM-DD with name hh-nchmfgov.json
+                        // 13. Save data in folder YY-MM-DD with name hh-thoitet.json
                         var check = saveDataToFile(data, outputFilePath);
                         if(check){
                             // 16. Update Table log(control): time:now, status: successful
