@@ -5,5 +5,5 @@
     "database": "control",
     "databasestaging": "staging",
 
-    "list_url": ["https://thoitiet.edu.vn/"]
+    "list_url": ["https://thoitiet.vn","https://thoitiet.edu.vn/"]
   }
