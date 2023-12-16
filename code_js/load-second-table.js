@@ -13,7 +13,7 @@ function nameFile1() {
     const now = new Date();
     const hours = now.getHours();
 
-    const currentTime = `${hours}-nchmfgov`;
+    const currentTime = `${hours}-thoitiet`;
     return currentTime;
 }
 
@@ -95,7 +95,7 @@ async function main() {
             return;
         }else{
             console.error('Kết nối DB control thành công');
-            var url1 = 'https://www.nchmf.gov.vn/kttv/';
+            var url1 = 'https://thoitiet.vn';
             var url2 = 'https://thoitiet.edu.vn/';
             var length_list_url = configData.list_url.length;
             //3. Check if the file named in the list of allowed data loading is successful or not in now hour 
@@ -238,16 +238,14 @@ async function main() {
                                                         console.log('url 1&2');
                                                         const jsonData1 = JSON.parse(fs.readFileSync(newestFileUrl1, 'utf8'));
                                                         const jsonData2 = JSON.parse(fs.readFileSync(newestFileUrl2, 'utf8'));
-                                                        const values1 = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url1]);
-                                                        const values2 = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url2]);
-                                                        var values = values1.map((item, index) => [...item, ...values2[index]]);
-                                                    }
-                                                    if(kiemTra(configData.list_url, url1)){
+                                                        var values1 = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url1]);
+                                                        var values2 = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url2]);
+                                                        var values = values1.concat(values2);
+                                                    }else if(kiemTra(configData.list_url, url1)){
                                                         console.log('url 1');
                                                         const jsonData1 = JSON.parse(fs.readFileSync(newestFileUrl1, 'utf8'));
                                                         var values = jsonData1.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url1]);
-                                                    }
-                                                    if(kiemTra(configData.list_url, url2)){
+                                                    }else if(kiemTra(configData.list_url, url2)){
                                                         console.log('url 2');
                                                         const jsonData2 = JSON.parse(fs.readFileSync(newestFileUrl2, 'utf8'));
                                                         var values = jsonData2.map(item => [time, item.province, item.temperature, item.weather, item.humidity, item.T[0], item.T[1], item.T[2], item.T[3], item.T[4], url2]);
