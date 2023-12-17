@@ -16,42 +16,27 @@ const WeatherDetail = ({apiUrl, id, weatherData}) => {
 
     // Get weather icon
     const getWeatherIcon = (item) => {
-        switch (item.weather) {
-            case 'Bầu trời quang đãng':
-                return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
-                            height="180"/>;
-
-            case 'Mây rải rác':
-                return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
-                            height="200"/>;
-
-            case 'Mây thưa':
-                return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
-                            height="200"/>;
-
-            case 'Mây cụm':
-                return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
-                            height="200"/>;
-
-            case 'Mây đen u ám':
-                return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
-                            height="200"/>;
-
-            case 'Mưa vừa':
-                return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
-                            height="200"/>;
-
-            case 'Mưa nhẹ':
-                return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
-                            height="200"/>;
-
-            case 'Mưa dông':
-                return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
-                            height="200"/>;
-
-            case 'Đêm có mây':
-                return <img src="assets/images/weather-icons/moon_cloudy.png" alt="thunderstorm" width="200"
-                            height="200"/>;
+        if (item.weather === 'Bầu trời quang đãng') {
+            return <img src="assets/images/weather-icons/sunny.png" alt="sunny" width="180"
+                        height="180"/>;
+        } else if (item.weather === 'Mây rải rác') {
+            return <img src="assets/images/weather-icons/mild_sunshine.png" alt="mild sunshine" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Mây thưa') {
+            return <img src="assets/images/weather-icons/cloudy.png" alt="cloudy" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Nhiều mây' || item.weather === 'Mây cụm' || item.weather === 'Mây đen u ám') {
+            return <img src="assets/images/weather-icons/mostly_cloudy.png" alt="mostly cloudy" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Mưa vừa' || item.weather === 'Mưa nhẹ') {
+            return <img src="assets/images/weather-icons/rainy.png" alt="rainy" width="200"
+                        height="200"/>;
+        } else if (item.weather === 'Mưa dông') {
+            return <img src="assets/images/weather-icons/thunderstorm.png" alt="thunderstorm" width="200"
+                        height="200"/>;
+        } else {
+            return <img src="assets/images/weather-icons/moon_cloudy.png" alt="moon cloudy" width="200"
+                        height="200"/>;
         }
     }
 
